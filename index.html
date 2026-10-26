@@ -36,44 +36,101 @@
         .btn-guardar:active { background: #1e8449; }
         
         .empty-msg { text-align: center; color: #888; padding: 20px 10px; font-size: 14px; border: 2px dashed #ccc; border-radius: 10px; background: #fafafa; }
+
+        /* Estilos Pantalla de Resumen / Aprobación */
+        #summaryView { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; }
+        .summary-header { text-align: center; color: #5a1827; margin-bottom: 20px; }
+        .summary-header h2 { margin: 0 0 5px 0; font-size: 22px; }
+        .summary-meta { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; border-left: 4px solid #5a1827; }
+        .summary-meta p { margin: 4px 0; }
+        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+        .summary-table th, .summary-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .summary-table th { background-color: #5a1827; color: white; }
+        .summary-buttons { display: flex; gap: 10px; }
+        .btn-back { background: #e74c3c; color: white; border: none; padding: 14px; font-size: 15px; font-weight: bold; border-radius: 8px; flex: 1; cursor: pointer; }
+        .btn-approve { background: #27ae60; color: white; border: none; padding: 14px; font-size: 15px; font-weight: bold; border-radius: 8px; flex: 1; cursor: pointer; }
+        .loading-overlay { display: none; text-align: center; padding: 20px; font-weight: bold; color: #5a1827; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <div class="header-box">
-        <h2>Control de Inventario Mensual</h2>
-        <div class="form-group">
-            <label>Mes y Año</label>
-            <input type="month" id="mesAno">
+    <div id="mainView">
+        <div class="header-box">
+            <h2>Control de Inventario Mensual</h2>
+            <div class="form-group">
+                <label>Mes y Año</label>
+                <input type="month" id="mesAno">
+            </div>
+            <div class="form-group">
+                <label>Operario / Responsable</label>
+                <input type="text" id="operario" placeholder="Nombre del encargado">
+            </div>
         </div>
-        <div class="form-group">
-            <label>Operario / Responsable</label>
-            <input type="text" id="operario" placeholder="Nombre del encargado">
+
+        <div class="selector-box">
+            <div class="selector-title">🔍 Seleccionar Recipiente / Envase Ocupado</div>
+            <div class="form-group">
+                <select id="selectRecipiente">
+                    <option value="">Cargando catálogo...</option>
+                </select>
+            </div>
+            <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
+        </div>
+
+        <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes Ocupados (<span id="cantOcupados">0</span>)</h3>
+
+        <div id="contenedorOcupados">
+            <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>
+        </div>
+
+        <div class="footer-total">
+            <div class="total-info">
+                TOTAL EN BODEGA:<br>
+                <span class="total-lts" id="totalLitros">0 Lts</span>
+            </div>
+            <button class="btn-guardar" onclick="revisarInventario()">🔍 REVISAR Y APROBAR</button>
         </div>
     </div>
 
-    <div class="selector-box">
-        <div class="selector-title">🔍 Seleccionar Recipiente / Envase Ocupado</div>
-        <div class="form-group">
-            <select id="selectRecipiente">
-                <option value="">Cargando catálogo...</option>
-            </select>
+    <!-- PANTALLA DE RESUMEN Y APROBACIÓN -->
+    <div id="summaryView" style="display: none;">
+        <div class="summary-header">
+            <h2>📋 Resumen de Inventario</h2>
+            <p style="color: #666; font-size: 14px;">Verifica los datos antes de enviarlos definitivamente a la planilla.</p>
         </div>
-        <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
-    </div>
 
-    <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes Ocupados (<span id="cantOcupados">0</span>)</h3>
-
-    <div id="contenedorOcupados">
-        <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>
-    </div>
-
-    <div class="footer-total">
-        <div class="total-info">
-            TOTAL EN BODEGA:<br>
-            <span class="total-lts" id="totalLitros">0 Lts</span>
+        <div class="summary-meta" id="summaryMetaText">
+            <!-- Se llena por JS -->
         </div>
-        <button class="btn-guardar" onclick="guardarInventario()">💾 GUARDAR EN EXCEL</button>
+
+        <div style="overflow-x: auto;">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Recipiente</th>
+                        <th>Dueño</th>
+                        <th>Varietal</th>
+                        <th>Litros / Cant.</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                    <!-- Se llena por JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: right; font-size: 16px; font-weight: bold; margin-bottom: 20px; color: #27ae60;">
+            Total General: <span id="summaryTotalLitros">0 Lts</span>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            Guardando datos en Google Sheets... Por favor espere.
+        </div>
+
+        <div class="summary-buttons" id="summaryButtons">
+            <button class="btn-back" onclick="volverACorregir()">✏️ Volver a Corregir</button>
+            <button class="btn-approve" onclick="aprobarYEnviar()">✅ Aprobar y Enviar</button>
+        </div>
     </div>
 
     <script>
@@ -123,14 +180,12 @@
                 return;
             }
 
-            // Detectar si es envase genérico (por cantidad de unidades) o pileta fija
             const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
                                   itemCat.nombre.toLowerCase().includes('tarza') || 
                                   itemCat.nombre.toLowerCase().includes('bidon') || 
                                   itemCat.nombre.toLowerCase().includes('damajuana') || 
                                   itemCat.nombre.toLowerCase().includes('botella');
 
-            // Si es pileta fija, inicializamos con su capacidad máxima por defecto para que sea editable
             let valorInicial = esPorUnidades ? '' : (itemCat.capacidad || '');
 
             ocupados.push({
@@ -210,10 +265,8 @@
             let num = parseFloat(val) || 0;
 
             if (ocupados[index].esPorUnidades) {
-                // Si es genérico (barricas, bidones, etc.), multiplica cantidad x capacidad unitaria
                 ocupados[index].litrosCalculados = num * ocupados[index].capacidad;
             } else {
-                // Si es pileta/tanque numerado, toma directamente el valor ingresado (ej. si mermó de 9000 a 8800)
                 ocupados[index].litrosCalculados = num;
             }
 
@@ -233,7 +286,7 @@
             document.getElementById('totalLitros').innerText = total.toLocaleString() + ' Lts';
         }
 
-        function guardarInventario() {
+        function revisarInventario() {
             const operario = document.getElementById('operario').value.trim();
             const mesAno = document.getElementById('mesAno').value;
 
@@ -254,9 +307,49 @@
                 return;
             }
 
-            if (!confirm(`¿Deseas registrar ${ocupados.length} recipientes con un volumen total de ${document.getElementById('totalLitros').innerText}?`)) {
-                return;
-            }
+            // Construir la vista de resumen
+            document.getElementById('summaryMetaText').innerHTML = `
+                <p><strong>Operario:</strong> ${operario}</p>
+                <p><strong>Mes / Año:</strong> ${mesAno}</p>
+                <p><strong>Total Recipientes:</strong> ${ocupados.length}</p>
+            `;
+
+            let tbodyHtml = '';
+            let totalGeneral = 0;
+            ocupados.forEach(item => {
+                totalGeneral += item.litrosCalculados;
+                let detalleCant = item.esPorUnidades ? `${item.litrosCalculados.toLocaleString()} L (${item.cantidad} unid.)` : `${item.litrosCalculados.toLocaleString()} L`;
+                tbodyHtml += `
+                    <tr>
+                        <td><strong>${item.nombre}</strong></td>
+                        <td>${item.dueno}</td>
+                        <td>${item.varietal || '-'}</td>
+                        <td>${detalleCant}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('summaryTableBody').innerHTML = tbodyHtml;
+            document.getElementById('summaryTotalLitros').innerText = totalGeneral.toLocaleString() + ' Lts';
+
+            // Cambiar de vista
+            document.getElementById('mainView').style.display = 'none';
+            document.getElementById('summaryView').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function volverACorregir() {
+            document.getElementById('summaryView').style.display = 'none';
+            document.getElementById('mainView').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function aprobarYEnviar() {
+            const operario = document.getElementById('operario').value.trim();
+            const mesAno = document.getElementById('mesAno').value;
+
+            document.getElementById('summaryButtons').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'block';
 
             let itemsAGuardar = ocupados.map(o => ({
                 nombre: o.nombre,
@@ -277,12 +370,13 @@
             .then(res => res.json())
             .then(res => {
                 alert(res.message);
-                ocupados = [];
-                renderizarOcupados();
+                location.reload();
             })
             .catch(err => {
                 alert("Error al guardar en Google Sheets.");
                 console.error(err);
+                document.getElementById('summaryButtons').style.display = 'flex';
+                document.getElementById('loadingOverlay').style.display = 'none';
             });
         }
     </script>
