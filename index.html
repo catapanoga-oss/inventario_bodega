@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control de Inventario - Bodega</title>
+    <title>Control Inventario Mensual - Bodega Catapano Wines</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 12px; background: #f0f2f5; color: #1c1e21; }
         .header-box { background: #5a1827; color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
@@ -62,10 +62,10 @@
 
     <div id="mainView">
         <div class="header-box">
-            <h2>Control de Inventario Mensual</h2>
+            <h2>🍷 Control Inventario Mensual<br><span style="font-size: 14px; font-weight: normal; opacity: 0.9;">Bodega Catapano Wines</span></h2>
             <div class="form-group">
-                <label>Mes y Año</label>
-                <input type="month" id="mesAno">
+                <label>Fecha de Control (Día, Mes y Año)</label>
+                <input type="date" id="fechaInventario">
             </div>
             <div class="form-group">
                 <label>Operario / Responsable</label>
@@ -102,7 +102,7 @@
     <div id="summaryView" style="display: none;">
         <div class="summary-header">
             <h2>📋 Resumen Detallado de Inventario</h2>
-            <p style="color: #666; font-size: 13px;">Verifica cada ítem cargado antes de enviarlo definitivamente a la planilla.</p>
+            <p style="color: #666; font-size: 13px;">Bodega Catapano Wines - Verifica cada ítem cargado antes de enviar.</p>
         </div>
 
         <div class="summary-meta" id="summaryMetaText">
@@ -147,7 +147,10 @@
 
         window.onload = function() {
             const d = new Date();
-            document.getElementById('mesAno').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            document.getElementById('fechaInventario').value = `${year}-${month}-${day}`;
             cargarCatalogo();
         };
 
@@ -295,10 +298,16 @@
 
         function revisarInventario() {
             const operario = document.getElementById('operario').value.trim();
-            const mesAno = document.getElementById('mesAno').value;
+            const fechaInv = document.getElementById('fechaInventario').value;
 
             if (!operario) {
                 alert("Por favor ingresa tu nombre de Operario arriba.");
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                return;
+            }
+
+            if (!fechaInv) {
+                alert("Por favor selecciona la fecha del control.");
                 window.scrollTo({top: 0, behavior: 'smooth'});
                 return;
             }
@@ -314,14 +323,12 @@
                 return;
             }
 
-            // Llenar metadatos del resumen
             document.getElementById('summaryMetaText').innerHTML = `
                 <p><strong>Responsable:</strong> ${operario}</p>
-                <p><strong>Mes / Período:</strong> ${mesAno}</p>
+                <p><strong>Fecha del Control:</strong> ${fechaInv}</p>
                 <p><strong>Total de Recipientes Controlados:</strong> ${ocupados.length}</p>
             `;
 
-            // Llenar tabla detallada
             let tbodyHtml = '';
             let totalGeneral = 0;
             ocupados.forEach(item => {
@@ -347,7 +354,6 @@
             document.getElementById('summaryTableBody').innerHTML = tbodyHtml;
             document.getElementById('summaryTotalLitros').innerText = totalGeneral.toLocaleString() + ' Lts';
 
-            // Ocultar vista principal y mostrar resumen
             document.getElementById('mainView').style.display = 'none';
             document.getElementById('summaryView').style.display = 'block';
             window.scrollTo({top: 0, behavior: 'smooth'});
@@ -361,7 +367,7 @@
 
         function aprobarYEnviar() {
             const operario = document.getElementById('operario').value.trim();
-            const mesAno = document.getElementById('mesAno').value;
+            const fechaInv = document.getElementById('fechaInventario').value;
 
             document.getElementById('summaryButtons').style.display = 'none';
             document.getElementById('loadingOverlay').style.display = 'block';
@@ -377,7 +383,7 @@
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({
-                    mesAno: mesAno,
+                    mesAno: fechaInv, // Se guarda en la misma propiedad para que lo reciba Google Sheets
                     operario: operario,
                     items: itemsAGuardar
                 })
