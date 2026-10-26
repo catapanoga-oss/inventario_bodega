@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Inventario - Bodega</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 10px; background: #f4f6f9; color: #333; }
+        header { background: #5a1827; color: white; padding: 15px; border-radius: 10px; margin-bottom: 12px; }
+        header h2 { margin: 0 0 10px 0; font-size: 18px; text-align: center; }
+        .form-row { margin-bottom: 8px; }
+        .form-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 3px; }
+        .form-row input { width: 100%; padding: 8px; border-radius: 6px; border: none; box-sizing: border-box; font-size: 14px; }
+        
+        .card { background: white; border-radius: 8px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #ccc; }
+        .card.ocupado { border-left-color: #27ae60; background: #fcfcfc; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; color: #5a1827; }
+        .cap-badge { font-size: 11px; background: #eee; padding: 2px 6px; border-radius: 10px; color: #555; }
+        
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        input, select { width: 100%; padding: 7px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+        
+        .footer-total { position: sticky; bottom: 0; background: white; padding: 12px; border-top: 2px solid #ddd; border-radius: 10px 10px 0 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .total-text { font-size: 14px; font-weight: bold; color: #333; }
+        .btn-enviar { background: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .btn-enviar:active { background: #1e8449; }
+        .loading { text-align: center; padding: 30px; font-weight: bold; color: #666; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>🍷 Control Mensual de Bodega</h2>
+        <div class="form-row">
+            <label>Mes y Año</label>
+            <input type="month" id="mesAno">
+        </div>
+        <div class="form-row">
+            <label>Operario / Responsable</label>
+            <input type="text" id="operario" placeholder="Tu nombre">
+        </div>
+    </header>
+
+    <div id="loading" class="loading">Cargando recipientes desde la base de datos...</div>
+    <div id="listaRecipientes"></div>
+
+    <div class="footer-total">
+        <div class="total-text">Ocupados: <span id="contadorOcupados">0</span><br>Total Litros: <span id="sumaTotalLitros">0</span> L</div>
+        <button class="btn-enviar" onclick="enviarInventario()">💾 GUARDAR</button>
+    </div>
+
+    <script>
+        const API_URL = "TU_URL_DE_APPS_SCRIPT_AQUI"; // <-- Pega aquí tu URL de Apps Script
+        let recipientes = [];
+
+        window.onload = function() {
+            const d = new Date();
+            document.getElementById('mesAno').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            cargarCatalogo();
+        };
+
+        function cargarCatalogo() {
+            fetch(API_URL + "?action=getCatalogo")
+                .then(res => res.json())
+                .then(data => {
+                    recipientes = data;
+                    renderizar();
+                    document.getElementById('loading').style.display = 'none';
+                })
+                .catch(err => {
+                    document.getElementById('loading').innerText = "Error al conectar con la base de datos.";
+                    console.error(err);
+                });
+        }
+
+        function renderizar() {
+            let html = '';
+            recipientes.forEach((r, i) => {
+                let capTxt = r.capacidad ? r.capacidad + ' Lts' : 'Envase';
+                html += `
+                    <div class="card" id="card_${i}">
+                        <div class="card-header">
+                            <span>${r.nombre}</span>
+                            <span class="cap-badge">${capTxt}</span>
+                        </div>
+                        <div class="grid-inputs">
+                            <div>
+                                <input type="number" step="any" id="cant_${i}" placeholder="Litros / Cant" oninput="actualizarEstado(${i})">
+                            </div>
+                            <div>
+                                <select id="dueno_${i}">
+                                    <option value="Propio">Propio</option>
+                                    <option value="Cliente A">Cliente A</option>
+                                    <option value="Cliente B">Cliente B</option>
+                                    <option value="Terceros">Terceros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <input type="text" id="var_${i}" placeholder="Varietal / Vino">
+                            </div>
+                            <div>
+                                <input type="text" id="obs_${i}" placeholder="Observaciones">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('listaRecipientes').innerHTML = html;
+        }
+
+        function actualizarEstado(i) {
+            let val = document.getElementById(`cant_${i}`).value;
+            let card = document.getElementById(`card_${i}`);
+            if (val !== "" && parseFloat(val) > 0) {
+                card.classList.add('ocupado');
+            } else {
+                card.classList.remove('ocupado');
+            }
+            calcularTotalesResumen();
+        }
+
+        function calcularTotalesResumen() {
+            let count = 0;
+            let totalLts = 0;
+            recipientes.forEach((r, i) => {
+                let val = parseFloat(document.getElementById(`cant_${i}`).value) || 0;
+                if (val > 0) {
+                    count++;
+                    totalLts += val;
+                }
+            });
+            document.getElementById('contadorOcupados').innerText = count;
+            document.getElementById('sumaTotalLitros').innerText = totalLts.toLocaleString();
+        }
+
+        function enviarInventario() {
+            let operario = document.getElementById('operario').value.trim();
+            let mesAno = document.getElementById('mesAno').value;
+
+            if (!operario) {
+                alert("Por favor ingresa tu nombre como Operario.");
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                return;
+            }
+
+            let items = [];
+            recipientes.forEach((r, i) => {
+                let cant = document.getElementById(`cant_${i}`).value;
+                if (cant !== "" && parseFloat(cant) >= 0) {
+                    items.push({
+                        nombre: r.nombre,
+                        cantidad: cant,
+                        dueno: document.getElementById(`dueno_${i}`).value,
+                        varietal: document.getElementById(`var_${i}`).value,
+                        observaciones: document.getElementById(`obs_${i}`).value
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert("No has cargado ningún recipiente.");
+                return;
+            }
+
+            if (!confirm(`¿Estás seguro de registrar ${items.length} recipientes?`)) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerText = "Guardando en Google Sheets...";
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ mesAno, operario, items })
+            })
+            .then(res => res.json())
+            .then(res => {
+                alert(res.message);
+                location.reload();
+            })
+            .catch(err => {
+                alert("Error al guardar los datos.");
+                console.error(err);
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
