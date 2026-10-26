@@ -19,8 +19,10 @@
         .btn-add:active { background: #1c5980; }
         
         .card-ocupado { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #27ae60; position: relative; }
-        .card-title { font-weight: bold; font-size: 16px; color: #5a1827; }
+        .card-title { font-weight: bold; font-size: 15px; color: #5a1827; padding-right: 25px; }
         .card-cap { font-size: 12px; color: #666; font-weight: normal; }
+        .subtotal-tag { font-size: 13px; font-weight: bold; color: #27ae60; margin-top: 4px; }
+        
         .btn-remove { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; }
         
         .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -39,7 +41,7 @@
 <body>
 
     <div class="header-box">
-        <h2>🍷 Control de Inventario Mensual</h2>
+        <h2>Control de Inventario Mensual</h2>
         <div class="form-group">
             <label>Mes y Año</label>
             <input type="month" id="mesAno">
@@ -50,21 +52,20 @@
         </div>
     </div>
 
-    <!-- SELECCIÓN AL VUELO DE RECIPIENTE -->
     <div class="selector-box">
-        <div class="selector-title">🔍 Seleccionar Recipiente Ocupado</div>
+        <div class="selector-title">🔍 Seleccionar Recipiente / Envase Ocupado</div>
         <div class="form-group">
             <select id="selectRecipiente">
-                <option value="">Cargando lista de bodega...</option>
+                <option value="">Cargando catálogo...</option>
             </select>
         </div>
-        <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR A LA LISTA</button>
+        <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
     </div>
 
     <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes Ocupados (<span id="cantOcupados">0</span>)</h3>
 
     <div id="contenedorOcupados">
-        <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta, tanque o envase ocupado y tócalo para agregarlo.</div>
+        <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>
     </div>
 
     <div class="footer-total">
@@ -76,7 +77,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbz_FWTLfiuS0VRPaorJbjFRGfLbi0sWE_F_nXsiGZzeWtVAbURB06aOaA2wfKSF-FM6/exec"; // <-- Pega aquí tu URL de Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbz_FWTLfiuS0VRPaorJbjFRGfLbi0sWE_F_nXsiGZzeWtVAbURB06aOaA2wfKSF-FM6/exec"; // <-- Pega tu URL de Apps Script
         let catalogo = [];
         let ocupados = [];
 
@@ -101,10 +102,10 @@
 
         function poblarSelect() {
             const sel = document.getElementById('selectRecipiente');
-            sel.innerHTML = '<option value="">-- Elegir Pileta / Tanque / Envase --</option>';
+            sel.innerHTML = '<option value="">-- Elegir Pileta / Envase --</option>';
             catalogo.forEach((r, index) => {
-                let cap = r.capacidad ? ` (${r.capacidad} L)` : '';
-                sel.innerHTML += `<option value="${index}">${r.nombre}${cap}</option>`;
+                let capTxt = r.capacidad ? ` (${r.capacidad} L)` : '';
+                sel.innerHTML += `<option value="${index}">${r.nombre}${capTxt}</option>`;
             });
         }
 
@@ -116,17 +117,25 @@
             }
 
             const itemCat = catalogo[idx];
-            
-            // Verificar si ya fue agregado
+
             if (ocupados.some(o => o.nombre === itemCat.nombre)) {
-                alert("Este recipiente ya está agregado en la lista.");
+                alert("Este recipiente ya fue agregado.");
                 return;
             }
+
+            // Identificar si es por Unidades o por Litros Directos
+            const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
+                                  itemCat.nombre.toLowerCase().includes('tarza') || 
+                                  itemCat.nombre.toLowerCase().includes('bidon') || 
+                                  itemCat.nombre.toLowerCase().includes('damajuana') || 
+                                  itemCat.nombre.toLowerCase().includes('botella');
 
             ocupados.push({
                 nombre: itemCat.nombre,
                 capacidad: itemCat.capacidad || 0,
+                esPorUnidades: esPorUnidades,
                 cantidad: '',
+                litrosCalculados: 0,
                 dueno: 'Propio',
                 varietal: '',
                 observaciones: ''
@@ -146,24 +155,28 @@
             document.getElementById('cantOcupados').innerText = ocupados.length;
 
             if (ocupados.length === 0) {
-                cont.innerHTML = '<div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta, tanque o envase ocupado y tócalo para agregarlo.</div>';
+                cont.innerHTML = '<div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>';
                 calcularTotalLitros();
                 return;
             }
 
             let html = '';
             ocupados.forEach((item, i) => {
-                let capTxt = item.capacidad ? `${item.capacidad} Lts Máx` : 'Envase';
+                let capTxt = item.capacidad ? `${item.capacidad} Lts Unit.` : '';
+                let placeholderTxt = item.esPorUnidades ? 'Cant. Unidades' : 'Litros Medidos';
+
                 html += `
                     <div class="card-ocupado">
                         <button class="btn-remove" onclick="eliminarItem(${i})">✕</button>
                         <div class="card-title">${item.nombre} <span class="card-cap">(${capTxt})</span></div>
+                        <div class="subtotal-tag" id="subtotal_${i}">Litros: ${item.litrosCalculados.toLocaleString()} L</div>
+                        
                         <div class="grid-inputs">
                             <div>
-                                <input type="number" step="any" placeholder="Litros / Cant" value="${item.cantidad}" oninput="actualizarDato(${i}, 'cantidad', this.value)">
+                                <input type="number" step="any" placeholder="${placeholderTxt}" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
                             </div>
                             <div>
-                                <select onchange="actualizarDato(${i}, 'dueno', this.value)">
+                                <select onchange="actualizarCampo(${i}, 'dueno', this.value)">
                                     <option value="Propio" ${item.dueno === 'Propio' ? 'selected' : ''}>Propio</option>
                                     <option value="Cliente A" ${item.dueno === 'Cliente A' ? 'selected' : ''}>Cliente A</option>
                                     <option value="Cliente B" ${item.dueno === 'Cliente B' ? 'selected' : ''}>Cliente B</option>
@@ -171,10 +184,10 @@
                                 </select>
                             </div>
                             <div>
-                                <input type="text" placeholder="Varietal / Vino" value="${item.varietal}" oninput="actualizarDato(${i}, 'varietal', this.value)">
+                                <input type="text" placeholder="Varietal / Vino" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
                             </div>
                             <div>
-                                <input type="text" placeholder="Observaciones" value="${item.observaciones}" oninput="actualizarDato(${i}, 'observaciones', this.value)">
+                                <input type="text" placeholder="Observaciones" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
                             </div>
                         </div>
                     </div>
@@ -185,18 +198,28 @@
             calcularTotalLitros();
         }
 
-        function actualizarDato(index, campo, valor) {
-            ocupados[index][campo] = valor;
-            if (campo === 'cantidad') {
-                calcularTotalLitros();
+        function actualizarValor(index, val) {
+            ocupados[index].cantidad = val;
+            let num = parseFloat(val) || 0;
+
+            if (ocupados[index].esPorUnidades) {
+                ocupados[index].litrosCalculados = num * ocupados[index].capacidad;
+            } else {
+                ocupados[index].litrosCalculados = num;
             }
+
+            document.getElementById(`subtotal_${index}`).innerText = `Litros: ${ocupados[index].litrosCalculados.toLocaleString()} L`;
+            calcularTotalLitros();
+        }
+
+        function actualizarCampo(index, campo, valor) {
+            ocupados[index][campo] = valor;
         }
 
         function calcularTotalLitros() {
             let total = 0;
             ocupados.forEach(item => {
-                let cant = parseFloat(item.cantidad) || 0;
-                total += cant;
+                total += item.litrosCalculados || 0;
             });
             document.getElementById('totalLitros').innerText = total.toLocaleString() + ' Lts';
         }
@@ -216,23 +239,31 @@
                 return;
             }
 
-            // Validar que hayan ingresado cantidades
             let sinCantidad = ocupados.filter(o => o.cantidad === '' || parseFloat(o.cantidad) <= 0);
             if (sinCantidad.length > 0) {
-                alert(`Hay ${sinCantidad.length} recipiente(s) agregados sin litros/cantidad. Por favor completa o elimina esos registros.`);
+                alert(`Hay ${sinCantidad.length} recipiente(s) agregados sin valor/cantidad ingresada. Por favor completa o elimínalos.`);
                 return;
             }
 
-            if (!confirm(`¿Deseas registrar ${ocupados.length} recipientes con un total de ${document.getElementById('totalLitros').innerText}?`)) {
+            if (!confirm(`¿Deseas registrar ${ocupados.length} recipientes con un volumen total de ${document.getElementById('totalLitros').innerText}?`)) {
                 return;
             }
+
+            // Preparar items para guardar convirtiendo todo a Litros Totales
+            let itemsAGuardar = ocupados.map(o => ({
+                nombre: o.nombre,
+                cantidad: o.litrosCalculados,
+                dueno: o.dueno,
+                varietal: o.varietal,
+                observaciones: o.observaciones + (o.esPorUnidades ? ` (${o.cantidad} unid.)` : '')
+            }));
 
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     mesAno: mesAno,
                     operario: operario,
-                    items: ocupados
+                    items: itemsAGuardar
                 })
             })
             .then(res => res.json())
