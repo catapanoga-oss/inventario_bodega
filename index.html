@@ -185,16 +185,17 @@
 
             const itemCat = catalogo[idx];
 
-            if (ocupados.some(o => o.nombre === itemCat.nombre)) {
-                alert("Este recipiente ya fue agregado.");
-                return;
-            }
-
             const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
                                   itemCat.nombre.toLowerCase().includes('tarza') || 
                                   itemCat.nombre.toLowerCase().includes('bidon') || 
                                   itemCat.nombre.toLowerCase().includes('damajuana') || 
                                   itemCat.nombre.toLowerCase().includes('botella');
+
+            // Solo prohibimos duplicados si es una pileta/tanque fijo (identificado). Los genéricos se pueden agregar múltiples veces.
+            if (!esPorUnidades && ocupados.some(o => o.nombre === itemCat.nombre)) {
+                alert("Este recipiente ya fue agregado.");
+                return;
+            }
 
             let valorInicial = esPorUnidades ? '' : (itemCat.capacidad || '');
 
@@ -259,7 +260,7 @@
                             </div>
                             <div>
                                 <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Observaciones</label>
-                                <input type="text" placeholder="Ej. En mermas" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
+                                <input type="text" placeholder="Ej. Proyecto 1" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
                             </div>
                         </div>
                     </div>
@@ -326,7 +327,7 @@
             document.getElementById('summaryMetaText').innerHTML = `
                 <p><strong>Responsable:</strong> ${operario}</p>
                 <p><strong>Fecha del Control:</strong> ${fechaInv}</p>
-                <p><strong>Total de Recipientes Controlados:</strong> ${ocupados.length}</p>
+                <p><strong>Total de Registros en el Control:</strong> ${ocupados.length}</p>
             `;
 
             let tbodyHtml = '';
@@ -383,7 +384,7 @@
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({
-                    mesAno: fechaInv, // Se guarda en la misma propiedad para que lo reciba Google Sheets
+                    mesAno: fechaInv,
                     operario: operario,
                     items: itemsAGuardar
                 })
