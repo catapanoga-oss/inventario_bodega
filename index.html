@@ -123,19 +123,22 @@
                 return;
             }
 
-            // Identificar si es por Unidades o por Litros Directos
+            // Detectar si es envase genérico (por cantidad de unidades) o pileta fija
             const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
                                   itemCat.nombre.toLowerCase().includes('tarza') || 
                                   itemCat.nombre.toLowerCase().includes('bidon') || 
                                   itemCat.nombre.toLowerCase().includes('damajuana') || 
                                   itemCat.nombre.toLowerCase().includes('botella');
 
+            // Si es pileta fija, inicializamos con su capacidad máxima por defecto para que sea editable
+            let valorInicial = esPorUnidades ? '' : (itemCat.capacidad || '');
+
             ocupados.push({
                 nombre: itemCat.nombre,
                 capacidad: itemCat.capacidad || 0,
                 esPorUnidades: esPorUnidades,
-                cantidad: '',
-                litrosCalculados: 0,
+                cantidad: valorInicial,
+                litrosCalculados: esPorUnidades ? 0 : (parseFloat(itemCat.capacidad) || 0),
                 dueno: 'Propio',
                 varietal: '',
                 observaciones: ''
@@ -162,20 +165,22 @@
 
             let html = '';
             ocupados.forEach((item, i) => {
-                let capTxt = item.capacidad ? `${item.capacidad} Lts Unit.` : '';
-                let placeholderTxt = item.esPorUnidades ? 'Cant. Unidades' : 'Litros Medidos';
+                let labelInput = item.esPorUnidades ? 'Cantidad de Unidades' : 'Litros Reales / Medidos';
+                let capInfo = item.esPorUnidades ? `(${item.capacidad} Lts unitario)` : `(Capacidad máx: ${item.capacidad} L)`;
 
                 html += `
                     <div class="card-ocupado">
                         <button class="btn-remove" onclick="eliminarItem(${i})">✕</button>
-                        <div class="card-title">${item.nombre} <span class="card-cap">(${capTxt})</span></div>
-                        <div class="subtotal-tag" id="subtotal_${i}">Litros: ${item.litrosCalculados.toLocaleString()} L</div>
+                        <div class="card-title">${item.nombre} <span class="card-cap">${capInfo}</span></div>
+                        <div class="subtotal-tag" id="subtotal_${i}">Total Litros: ${item.litrosCalculados.toLocaleString()} L</div>
                         
                         <div class="grid-inputs">
                             <div>
-                                <input type="number" step="any" placeholder="${placeholderTxt}" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
+                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">${labelInput}</label>
+                                <input type="number" step="any" placeholder="${labelInput}" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
                             </div>
                             <div>
+                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Dueño / Cliente</label>
                                 <select onchange="actualizarCampo(${i}, 'dueno', this.value)">
                                     <option value="Propio" ${item.dueno === 'Propio' ? 'selected' : ''}>Propio</option>
                                     <option value="Cliente A" ${item.dueno === 'Cliente A' ? 'selected' : ''}>Cliente A</option>
@@ -184,10 +189,12 @@
                                 </select>
                             </div>
                             <div>
-                                <input type="text" placeholder="Varietal / Vino" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
+                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Varietal / Tipo</label>
+                                <input type="text" placeholder="Ej. Malbec" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
                             </div>
                             <div>
-                                <input type="text" placeholder="Observaciones" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
+                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Observaciones</label>
+                                <input type="text" placeholder="Ej. En mermas" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
                             </div>
                         </div>
                     </div>
@@ -203,12 +210,14 @@
             let num = parseFloat(val) || 0;
 
             if (ocupados[index].esPorUnidades) {
+                // Si es genérico (barricas, bidones, etc.), multiplica cantidad x capacidad unitaria
                 ocupados[index].litrosCalculados = num * ocupados[index].capacidad;
             } else {
+                // Si es pileta/tanque numerado, toma directamente el valor ingresado (ej. si mermó de 9000 a 8800)
                 ocupados[index].litrosCalculados = num;
             }
 
-            document.getElementById(`subtotal_${index}`).innerText = `Litros: ${ocupados[index].litrosCalculados.toLocaleString()} L`;
+            document.getElementById(`subtotal_${index}`).innerText = `Total Litros: ${ocupados[index].litrosCalculados.toLocaleString()} L`;
             calcularTotalLitros();
         }
 
@@ -239,9 +248,9 @@
                 return;
             }
 
-            let sinCantidad = ocupados.filter(o => o.cantidad === '' || parseFloat(o.cantidad) <= 0);
+            let sinCantidad = ocupados.filter(o => o.cantidad === '' || parseFloat(o.cantidad) < 0);
             if (sinCantidad.length > 0) {
-                alert(`Hay ${sinCantidad.length} recipiente(s) agregados sin valor/cantidad ingresada. Por favor completa o elimínalos.`);
+                alert(`Hay recipientes sin valor asignado. Por favor revísalos.`);
                 return;
             }
 
@@ -249,7 +258,6 @@
                 return;
             }
 
-            // Preparar items para guardar convirtiendo todo a Litros Totales
             let itemsAGuardar = ocupados.map(o => ({
                 nombre: o.nombre,
                 cantidad: o.litrosCalculados,
