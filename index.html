@@ -30,7 +30,7 @@
 <body>
 
     <header>
-        <h2>🍷 Control Mensual de Bodega</h2>
+        <h2>Control Mensual de Bodega</h2>
         <div class="form-row">
             <label>Mes y Año</label>
             <input type="month" id="mesAno">
@@ -46,7 +46,7 @@
 
     <div class="footer-total">
         <div class="total-text">Ocupados: <span id="contadorOcupados">0</span><br>Total Litros: <span id="sumaTotalLitros">0</span> L</div>
-        <button class="btn-enviar" onclick="enviarInventario()">💾 GUARDAR</button>
+        <button class="btn-enviar" onclick="enviarInventario()">GUARDAR</button>
     </div>
 
     <script>
@@ -162,7 +162,7 @@
                 return;
             }
 
-            if (!confirm(`¿Estás seguro de registrar ${items.length} recipientes?`)) return;
+            if (!confirm("¿Estás seguro de registrar " + items.length + " recipientes?")) return;
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('loading').innerText = "Guardando en Google Sheets...";
