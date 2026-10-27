@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Control Inventario Mensual - Bodega Catapano Wines</title>
+    <title>Gestión Enológica Multi-Proyecto - Catapano Wines</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 12px; background: #f0f2f5; color: #1c1e21; }
         .header-box { background: #5a1827; color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
         .header-box h2 { margin: 0 0 10px 0; font-size: 18px; text-align: center; }
         .form-group { margin-bottom: 8px; }
-        .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 3px; opacity: 0.9; }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 3px; opacity: 0.95; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 6px; border: none; font-size: 14px; box-sizing: border-box; }
         
         .selector-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #5a1827; }
@@ -26,18 +26,18 @@
         .btn-remove { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; }
         
         .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
         
         .footer-total { position: sticky; bottom: 0; background: white; padding: 12px; border-top: 2px solid #ddd; border-radius: 12px 12px 0 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.15); display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
         .total-info { font-size: 13px; font-weight: bold; color: #333; }
         .total-lts { font-size: 18px; color: #27ae60; font-weight: bold; }
         
-        .btn-guardar { background: #27ae60; color: white; border: none; padding: 14px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .btn-guardar { background: #27ae60; color: white; border: none; padding: 14px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; }
         .btn-guardar:active { background: #1e8449; }
         
         .empty-msg { text-align: center; color: #888; padding: 20px 10px; font-size: 14px; border: 2px dashed #ccc; border-radius: 10px; background: #fafafa; }
 
-        /* Pantalla de Resumen Detallado */
+        /* Resumen Detallado */
         #summaryView { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; }
         .summary-header { text-align: center; color: #5a1827; margin-bottom: 15px; }
         .summary-header h2 { margin: 0 0 5px 0; font-size: 20px; }
@@ -45,8 +45,8 @@
         .summary-meta p { margin: 4px 0; }
         
         .table-responsive { overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
-        .summary-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
-        .summary-table th, .summary-table td { border-bottom: 1px solid #e0e0e0; padding: 8px 10px; text-align: left; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 600px; }
+        .summary-table th, .summary-table td { border-bottom: 1px solid #e0e0e0; padding: 8px; text-align: left; }
         .summary-table th { background-color: #5a1827; color: white; font-weight: 600; }
         .summary-table tr:nth-child(even) { background-color: #fafafa; }
         
@@ -62,14 +62,26 @@
 
     <div id="mainView">
         <div class="header-box">
-            <h2>🍷 Control Inventario Mensual<br><span style="font-size: 14px; font-weight: normal; opacity: 0.9;">Bodega Catapano Wines</span></h2>
+            <h2>🍷 Gestión Enológica Multi-Proyecto<br><span style="font-size: 13px; font-weight: normal; opacity: 0.9;">Control de Inventarios & Asesorías</span></h2>
             <div class="form-group">
                 <label>Fecha de Control (Día, Mes y Año)</label>
                 <input type="date" id="fechaInventario">
             </div>
             <div class="form-group">
-                <label>Operario / Responsable</label>
-                <input type="text" id="operario" placeholder="Nombre del encargado">
+                <label>Enólogo / Responsable</label>
+                <input type="text" id="operario" placeholder="Nombre del enólogo o encargado">
+            </div>
+            <div class="form-group">
+                <label>Bodega / Ubicación Física</label>
+                <select id="selectBodega" onchange="alCambiarBodega()">
+                    <option value="">Cargando bodegas...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Proyecto Principal (Predeterminado)</label>
+                <select id="selectProyecto">
+                    <option value="">Cargando proyectos...</option>
+                </select>
             </div>
         </div>
 
@@ -77,13 +89,13 @@
             <div class="selector-title">🔍 Seleccionar Recipiente / Envase Ocupado</div>
             <div class="form-group">
                 <select id="selectRecipiente">
-                    <option value="">Cargando catálogo...</option>
+                    <option value="">Selecciona primero una Bodega arriba...</option>
                 </select>
             </div>
             <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
         </div>
 
-        <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes Ocupados (<span id="cantOcupados">0</span>)</h3>
+        <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes en Control (<span id="cantOcupados">0</span>)</h3>
 
         <div id="contenedorOcupados">
             <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>
@@ -91,7 +103,7 @@
 
         <div class="footer-total">
             <div class="total-info">
-                TOTAL EN BODEGA:<br>
+                TOTAL CONTROLADO:<br>
                 <span class="total-lts" id="totalLitros">0 Lts</span>
             </div>
             <button class="btn-guardar" onclick="revisarInventario()">🔍 REVISAR Y APROBAR</button>
@@ -101,8 +113,8 @@
     <!-- PANTALLA DE RESUMEN DETALLADO Y APROBACIÓN -->
     <div id="summaryView" style="display: none;">
         <div class="summary-header">
-            <h2>📋 Resumen Detallado de Inventario</h2>
-            <p style="color: #666; font-size: 13px;">Bodega Catapano Wines - Verifica cada ítem cargado antes de enviar.</p>
+            <h2>📋 Resumen de Control Enológico</h2>
+            <p style="color: #666; font-size: 13px;">Verifica la asignación de proyectos y volúmenes antes de sincronizar.</p>
         </div>
 
         <div class="summary-meta" id="summaryMetaText">
@@ -114,10 +126,11 @@
                 <thead>
                     <tr>
                         <th>Recipiente</th>
-                        <th>Dueño</th>
-                        <th>Varietal / Tipo</th>
+                        <th>Proyecto</th>
+                        <th>Estado Enológico</th>
+                        <th>Varietal / Dueño</th>
                         <th>Obs.</th>
-                        <th>Litros Totales</th>
+                        <th>Volumen Total</th>
                     </tr>
                 </thead>
                 <tbody id="summaryTableBody">
@@ -127,22 +140,23 @@
         </div>
 
         <div class="summary-total-box">
-            Volumen Total en Bodega: <span id="summaryTotalLitros">0 Lts</span>
+            Volumen Total Controlado: <span id="summaryTotalLitros">0 Lts</span>
         </div>
 
         <div class="loading-overlay" id="loadingOverlay">
-            ⏳ Guardando datos en Google Sheets... Por favor espere.
+            ⏳ Sincronizando inventario con la base de datos central... Por favor espere.
         </div>
 
         <div class="summary-buttons" id="summaryButtons">
-            <button class="btn-back" onclick="volverACorregir()">✏️ Volver a Corregir</button>
-            <button class="btn-approve" onclick="aprobarYEnviar()">✅ Aprobar y Enviar</button>
+            <button class="btn-back" onclick="volverACorregir()">✏️ Volver a Editar</button>
+            <button class="btn-approve" onclick="aprobarYEnviar()">✅ Aprobar y Sincronizar</button>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbz_FWTLfiuS0VRPaorJbjFRGfLbi0sWE_F_nXsiGZzeWtVAbURB06aOaA2wfKSF-FM6/exec"; // <-- Pega tu URL de Apps Script
-        let catalogo = [];
+        const API_URL = "https://script.google.com/macros/s/AKfycbzVH8wN24X974mn96tU3IXQmte28USmMWTAvkwg6QD6gZVkvcy5vgZlOp_lfsN1rqma/exec"; // <-- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        let listaProyectos = [];
+        let catalogoGlobal = [];
         let ocupados = [];
 
         window.onload = function() {
@@ -151,26 +165,65 @@
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             document.getElementById('fechaInventario').value = `${year}-${month}-${day}`;
-            cargarCatalogo();
+            
+            cargarProyectosYBodegas();
         };
 
-        function cargarCatalogo() {
-            fetch(API_URL + "?action=getCatalogo")
+        function cargarProyectosYBodegas() {
+            fetch(API_URL + "?action=getProyectosYBodegas")
                 .then(res => res.json())
                 .then(data => {
-                    catalogo = data;
-                    poblarSelect();
+                    listaProyectos = data;
+                    poblarSelectsInicio();
                 })
                 .catch(err => {
-                    alert("Error al cargar el catálogo de la bodega.");
+                    alert("Error al cargar la lista de proyectos y bodegas.");
                     console.error(err);
                 });
         }
 
-        function poblarSelect() {
+        function poblarSelectsInicio() {
+            const selBodega = document.getElementById('selectBodega');
+            const selProyecto = document.getElementById('selectProyecto');
+
+            // Extraer bodegas únicas
+            let bodegasSet = new Set();
+            listaProyectos.forEach(p => {
+                if(p.bodegaOrigen) bodegasSet.add(p.bodegaOrigen);
+            });
+
+            selBodega.innerHTML = '<option value="">-- Seleccionar Bodega / Ubicación --</option>';
+            bodegasSet.forEach(b => {
+                selBodega.innerHTML += `<option value="${b}">${b}</option>`;
+            });
+
+            selProyecto.innerHTML = '<option value="">-- Seleccionar Proyecto Principal --</option>';
+            listaProyectos.forEach(p => {
+                selProyecto.innerHTML += `<option value="${p.idProyecto}" data-nombre="${p.nombreProyecto}">${p.nombreProyecto} (${p.bodegaOrigen})</option>`;
+            });
+        }
+
+        function alCambiarBodega() {
+            const bodega = document.getElementById('selectBodega').value;
+            if (!bodega) return;
+
+            // Filtrar catálogo para esa bodega
+            fetch(API_URL + "?action=getCatalogo&bodega=" + encodeURIComponent(bodega))
+                .then(res => res.json())
+                .then(data => {
+                    catalogoGlobal = data;
+                    poblarSelectRecipientes();
+                })
+                .catch(err => {
+                    alert("Error al obtener catálogo de la bodega.");
+                    console.error(err);
+                });
+        }
+
+        function poblarSelectRecipientes() {
             const sel = document.getElementById('selectRecipiente');
             sel.innerHTML = '<option value="">-- Elegir Pileta / Envase --</option>';
-            catalogo.forEach((r, index) => {
+            catalogoGlobal.forEach((r, index) => {
                 let capTxt = r.capacidad ? ` (${r.capacidad} L)` : '';
                 sel.innerHTML += `<option value="${index}">${r.nombre}${capTxt}</option>`;
             });
@@ -178,12 +231,14 @@
 
         function agregarRecipiente() {
             const idx = document.getElementById('selectRecipiente').value;
+            const selProyecto = document.getElementById('selectProyecto');
+
             if (idx === "") {
                 alert("Por favor selecciona un recipiente de la lista.");
                 return;
             }
 
-            const itemCat = catalogo[idx];
+            const itemCat = catalogoGlobal[idx];
 
             const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
                                   itemCat.nombre.toLowerCase().includes('tarza') || 
@@ -191,13 +246,16 @@
                                   itemCat.nombre.toLowerCase().includes('damajuana') || 
                                   itemCat.nombre.toLowerCase().includes('botella');
 
-            // Solo prohibimos duplicados si es una pileta/tanque fijo (identificado). Los genéricos se pueden agregar múltiples veces.
             if (!esPorUnidades && ocupados.some(o => o.nombre === itemCat.nombre)) {
-                alert("Este recipiente ya fue agregado.");
+                alert("Este recipiente ya fue agregado en este control.");
                 return;
             }
 
             let valorInicial = esPorUnidades ? '' : (itemCat.capacidad || '');
+
+            // Obtener datos del proyecto seleccionado por defecto
+            let idPrjSel = selProyecto.value;
+            let nomPrjSel = selProyecto.options[selProyecto.selectedIndex] ? selProyecto.options[selProyecto.selectedIndex].getAttribute('data-nombre') : 'Sin Asignar';
 
             ocupados.push({
                 nombre: itemCat.nombre,
@@ -205,8 +263,11 @@
                 esPorUnidades: esPorUnidades,
                 cantidad: valorInicial,
                 litrosCalculados: esPorUnidades ? 0 : (parseFloat(itemCat.capacidad) || 0),
+                idProyecto: idPrjSel,
+                nombreProyecto: nomPrjSel,
                 dueno: 'Propio',
                 varietal: '',
+                estadoVino: 'En Crianza / Stock',
                 observaciones: ''
             });
 
@@ -234,6 +295,13 @@
                 let labelInput = item.esPorUnidades ? 'Cantidad de Unidades' : 'Litros Reales / Medidos';
                 let capInfo = item.esPorUnidades ? `(${item.capacidad} Lts unitario)` : `(Capacidad máx: ${item.capacidad} L)`;
 
+                // Opciones de proyectos
+                let opcionesProyectosHtml = '';
+                listaProyectos.forEach(p => {
+                    let selAttr = (p.idProyecto === item.idProyecto) ? 'selected' : '';
+                    opcionesProyectosHtml += `<option value="${p.idProyecto}" data-nombre="${p.nombreProyecto}" ${selAttr}>${p.nombreProyecto}</option>`;
+                });
+
                 html += `
                     <div class="card-ocupado">
                         <button class="btn-remove" onclick="eliminarItem(${i})">✕</button>
@@ -242,11 +310,31 @@
                         
                         <div class="grid-inputs">
                             <div>
-                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">${labelInput}</label>
+                                <label>Proyecto / Marca</label>
+                                <select onchange="actualizarProyectoItem(${i}, this)">
+                                    ${opcionesProyectosHtml}
+                                </select>
+                            </div>
+                            <div>
+                                <label>${labelInput}</label>
                                 <input type="number" step="any" placeholder="${labelInput}" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
                             </div>
                             <div>
-                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Dueño / Cliente</label>
+                                <label>Estado Enológico</label>
+                                <select onchange="actualizarCampo(${i}, 'estadoVino', this.value)">
+                                    <option value="Mosto / En Fermentación" ${item.estadoVino === 'Mosto / En Fermentación' ? 'selected' : ''}>Mosto / En Fermentación</option>
+                                    <option value="Vino Nuevo / Post Fermentación" ${item.estadoVino === 'Vino Nuevo / Post Fermentación' ? 'selected' : ''}>Vino Nuevo / Post Fermentación</option>
+                                    <option value="En Crianza / Stock" ${item.estadoVino === 'En Crianza / Stock' ? 'selected' : ''}>En Crianza / Stock</option>
+                                    <option value="Cortes / Mezclas" ${item.estadoVino === 'Cortes / Mezclas' ? 'selected' : ''}>Cortes / Mezclas</option>
+                                    <option value="Listo para Fraccionar" ${item.estadoVino === 'Listo para Fraccionar' ? 'selected' : ''}>Listo para Fraccionar</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Varietal / Vino</label>
+                                <input type="text" placeholder="Ej. Malbec 2026" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
+                            </div>
+                            <div>
+                                <label>Dueño / Cliente</label>
                                 <select onchange="actualizarCampo(${i}, 'dueno', this.value)">
                                     <option value="Propio" ${item.dueno === 'Propio' ? 'selected' : ''}>Propio</option>
                                     <option value="Cliente A" ${item.dueno === 'Cliente A' ? 'selected' : ''}>Cliente A</option>
@@ -255,12 +343,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Varietal / Tipo</label>
-                                <input type="text" placeholder="Ej. Malbec" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
-                            </div>
-                            <div>
-                                <label style="font-size:11px; font-weight:bold; margin-bottom:2px; display:block; color:#555;">Observaciones</label>
-                                <input type="text" placeholder="Ej. Proyecto 1" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
+                                <label>Observaciones</label>
+                                <input type="text" placeholder="Ej. En mermas" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
                             </div>
                         </div>
                     </div>
@@ -269,6 +353,13 @@
 
             cont.innerHTML = html;
             calcularTotalLitros();
+        }
+
+        function actualizarProyectoItem(index, selectElem) {
+            let idPrj = selectElem.value;
+            let nomPrj = selectElem.options[selectElem.selectedIndex].getAttribute('data-nombre');
+            ocupados[index].idProyecto = idPrj;
+            ocupados[index].nombreProyecto = nomPrj;
         }
 
         function actualizarValor(index, val) {
@@ -300,15 +391,16 @@
         function revisarInventario() {
             const operario = document.getElementById('operario').value.trim();
             const fechaInv = document.getElementById('fechaInventario').value;
+            const bodega = document.getElementById('selectBodega').value;
 
             if (!operario) {
-                alert("Por favor ingresa tu nombre de Operario arriba.");
+                alert("Por favor ingresa tu nombre de Enólogo / Responsable.");
                 window.scrollTo({top: 0, behavior: 'smooth'});
                 return;
             }
 
-            if (!fechaInv) {
-                alert("Por favor selecciona la fecha del control.");
+            if (!bodega) {
+                alert("Por favor selecciona la Bodega / Ubicación.");
                 window.scrollTo({top: 0, behavior: 'smooth'});
                 return;
             }
@@ -325,9 +417,10 @@
             }
 
             document.getElementById('summaryMetaText').innerHTML = `
-                <p><strong>Responsable:</strong> ${operario}</p>
+                <p><strong>Enólogo / Responsable:</strong> ${operario}</p>
+                <p><strong>Bodega Auditada:</strong> ${bodega}</p>
                 <p><strong>Fecha del Control:</strong> ${fechaInv}</p>
-                <p><strong>Total de Registros en el Control:</strong> ${ocupados.length}</p>
+                <p><strong>Total de Recipientes Controlados:</strong> ${ocupados.length}</p>
             `;
 
             let tbodyHtml = '';
@@ -339,12 +432,13 @@
                     `${item.litrosCalculados.toLocaleString()} L`;
                 
                 let obsText = item.observaciones ? item.observaciones : '-';
-                let varietalText = item.varietal ? item.varietal : '-';
+                let varietalText = item.varietal ? `${item.varietal} (${item.dueno})` : item.dueno;
 
                 tbodyHtml += `
                     <tr>
                         <td><strong>${item.nombre}</strong></td>
-                        <td>${item.dueno}</td>
+                        <td><span style="color:#5a1827; font-weight:bold;">${item.nombreProyecto}</span></td>
+                        <td>${item.estadoVino}</td>
                         <td>${varietalText}</td>
                         <td>${obsText}</td>
                         <td style="font-weight:bold; color:#117a65; white-space:nowrap;">${detalleCant}</td>
@@ -369,23 +463,28 @@
         function aprobarYEnviar() {
             const operario = document.getElementById('operario').value.trim();
             const fechaInv = document.getElementById('fechaInventario').value;
+            const bodega = document.getElementById('selectBodega').value;
 
             document.getElementById('summaryButtons').style.display = 'none';
             document.getElementById('loadingOverlay').style.display = 'block';
 
             let itemsAGuardar = ocupados.map(o => ({
                 nombre: o.nombre,
+                idProyecto: o.idProyecto,
+                nombreProyecto: o.nombreProyecto,
                 cantidad: o.litrosCalculados,
                 dueno: o.dueno,
                 varietal: o.varietal,
+                estadoVino: o.estadoVino,
                 observaciones: o.observaciones + (o.esPorUnidades ? ` (${o.cantidad} unid.)` : '')
             }));
 
             fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({
-                    mesAno: fechaInv,
+                    fechaControl: fechaInv,
                     operario: operario,
+                    bodega: bodega,
                     items: itemsAGuardar
                 })
             })
