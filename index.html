@@ -6,6 +6,12 @@
     <title>Gestión Enológica Multi-Proyecto - Catapano Wines</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 12px; background: #f0f2f5; color: #1c1e21; }
+        
+        /* Barra de Navegación Superior */
+        .nav-tabs { display: flex; background: #5a1827; border-radius: 10px; padding: 4px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .nav-tab { flex: 1; text-align: center; padding: 10px; color: white; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
+        .nav-tab.active { background: #88243b; }
+
         .header-box { background: #5a1827; color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
         .header-box h2 { margin: 0 0 10px 0; font-size: 18px; text-align: center; }
         .form-group { margin-bottom: 8px; }
@@ -15,8 +21,8 @@
         .selector-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #5a1827; }
         .selector-title { font-weight: bold; color: #5a1827; font-size: 15px; margin-bottom: 10px; }
         
-        .btn-add { background: #2980b9; color: white; border: none; width: 100%; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
-        .btn-add:active { background: #1c5980; }
+        .btn-action { background: #2980b9; color: white; border: none; width: 100%; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        .btn-action:active { background: #1c5980; }
         
         .card-ocupado { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #27ae60; position: relative; }
         .card-title { font-weight: bold; font-size: 15px; color: #5a1827; padding-right: 25px; }
@@ -36,6 +42,13 @@
         .btn-guardar:active { background: #1e8449; }
         
         .empty-msg { text-align: center; color: #888; padding: 20px 10px; font-size: 14px; border: 2px dashed #ccc; border-radius: 10px; background: #fafafa; }
+
+        /* Vistas Admin y Global */
+        .admin-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #c0392b; }
+        .admin-card h3 { color: #5a1827; margin-top: 0; font-size: 16px; }
+        
+        .global-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-left: 5px solid #5a1827; }
+        .global-card h4 { margin: 0 0 8px 0; color: #5a1827; font-size: 16px; }
 
         /* Resumen Detallado */
         #summaryView { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; }
@@ -60,101 +73,190 @@
 </head>
 <body>
 
-    <div id="mainView">
-        <div class="header-box">
-            <h2>🍷 Gestión Enológica Multi-Proyecto<br><span style="font-size: 13px; font-weight: normal; opacity: 0.9;">Control de Inventarios & Asesorías</span></h2>
-            <div class="form-group">
-                <label>Fecha de Control (Día, Mes y Año)</label>
-                <input type="date" id="fechaInventario">
+    <!-- MENÚ DE NAVEGACIÓN -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" id="tabControl" onclick="cambiarSeccion('control')">📝 Control</div>
+        <div class="nav-tab" id="tabGlobal" onclick="cambiarSeccion('global')">📊 Inventario Global</div>
+        <div class="nav-tab" id="tabAdmin" onclick="cambiarSeccion('admin')">⚙️ Admin</div>
+    </div>
+
+    <!-- SECCIÓN 1: CONTROL DE INVENTARIO -->
+    <div id="sectionControl">
+        <div id="mainView">
+            <div class="header-box">
+                <h2>🍷 Control Enológico Multi-Proyecto<br><span style="font-size: 13px; font-weight: normal; opacity: 0.9;">Bodega Catapano Wines</span></h2>
+                <div class="form-group">
+                    <label>Fecha de Control</label>
+                    <input type="date" id="fechaInventario">
+                </div>
+                <div class="form-group">
+                    <label>Enólogo / Responsable</label>
+                    <input type="text" id="operario" placeholder="Nombre del encargado">
+                </div>
+                <div class="form-group">
+                    <label>Bodega / Ubicación Física</label>
+                    <select id="selectBodega" onchange="alCambiarBodega()">
+                        <option value="">Cargando bodegas...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Proyecto Principal (Predeterminado)</label>
+                    <select id="selectProyecto">
+                        <option value="">Cargando proyectos...</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Enólogo / Responsable</label>
-                <input type="text" id="operario" placeholder="Nombre del enólogo o encargado">
+
+            <div class="selector-box">
+                <div class="selector-title">🔍 Seleccionar Recipiente Ocupado</div>
+                <div class="form-group">
+                    <select id="selectRecipiente">
+                        <option value="">Selecciona primero una Bodega arriba...</option>
+                    </select>
+                </div>
+                <button class="btn-action" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
             </div>
-            <div class="form-group">
-                <label>Bodega / Ubicación Física</label>
-                <select id="selectBodega" onchange="alCambiarBodega()">
-                    <option value="">Cargando bodegas...</option>
-                </select>
+
+            <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes en Control (<span id="cantOcupados">0</span>)</h3>
+
+            <div id="contenedorOcupados">
+                <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba y presiona Agregar.</div>
             </div>
-            <div class="form-group">
-                <label>Proyecto Principal (Predeterminado)</label>
-                <select id="selectProyecto">
-                    <option value="">Cargando proyectos...</option>
-                </select>
+
+            <div class="footer-total">
+                <div class="total-info">
+                    TOTAL CONTROLADO:<br>
+                    <span class="total-lts" id="totalLitros">0 Lts</span>
+                </div>
+                <button class="btn-guardar" onclick="revisarInventario()">🔍 REVISAR Y APROBAR</button>
             </div>
         </div>
 
-        <div class="selector-box">
-            <div class="selector-title">🔍 Seleccionar Recipiente / Envase Ocupado</div>
-            <div class="form-group">
-                <select id="selectRecipiente">
-                    <option value="">Selecciona primero una Bodega arriba...</option>
-                </select>
+        <!-- PANTALLA DE RESUMEN Y APROBACIÓN -->
+        <div id="summaryView" style="display: none;">
+            <div class="summary-header">
+                <h2>📋 Resumen de Control Enológico</h2>
+                <p style="color: #666; font-size: 13px;">Verifica la asignación de proyectos antes de sincronizar.</p>
             </div>
-            <button class="btn-add" onclick="agregarRecipiente()">+ AGREGAR AL CONTROL</button>
-        </div>
 
-        <h3 style="color:#5a1827; font-size:16px; margin: 15px 0 10px 0;">📋 Recipientes en Control (<span id="cantOcupados">0</span>)</h3>
+            <div class="summary-meta" id="summaryMetaText"></div>
 
-        <div id="contenedorOcupados">
-            <div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>
-        </div>
-
-        <div class="footer-total">
-            <div class="total-info">
-                TOTAL CONTROLADO:<br>
-                <span class="total-lts" id="totalLitros">0 Lts</span>
+            <div class="table-responsive">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Recipiente</th>
+                            <th>Proyecto</th>
+                            <th>Estado Enológico</th>
+                            <th>Varietal / Dueño</th>
+                            <th>Obs.</th>
+                            <th>Volumen Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody"></tbody>
+                </table>
             </div>
-            <button class="btn-guardar" onclick="revisarInventario()">🔍 REVISAR Y APROBAR</button>
+
+            <div class="summary-total-box">
+                Volumen Total Controlado: <span id="summaryTotalLitros">0 Lts</span>
+            </div>
+
+            <div class="loading-overlay" id="loadingOverlay">
+                ⏳ Sincronizando inventario con Google Sheets...
+            </div>
+
+            <div class="summary-buttons" id="summaryButtons">
+                <button class="btn-back" onclick="volverACorregir()">✏️ Volver a Editar</button>
+                <button class="btn-approve" onclick="aprobarYEnviar()">✅ Aprobar y Sincronizar</button>
+            </div>
         </div>
     </div>
 
-    <!-- PANTALLA DE RESUMEN DETALLADO Y APROBACIÓN -->
-    <div id="summaryView" style="display: none;">
-        <div class="summary-header">
-            <h2>📋 Resumen de Control Enológico</h2>
-            <p style="color: #666; font-size: 13px;">Verifica la asignación de proyectos y volúmenes antes de sincronizar.</p>
+    <!-- SECCIÓN 2: INVENTARIO GLOBAL POR PROYECTO -->
+    <div id="sectionGlobal" style="display: none;">
+        <div class="header-box" style="text-align: center;">
+            <h2>📊 Inventario Global Consolidado</h2>
+            <p style="margin: 0; font-size: 13px; opacity: 0.9;">Litros totales en tiempo real por proyecto</p>
+        </div>
+        <div id="contenedorGlobal">
+            <div class="empty-msg">Cargando inventario global...</div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3: ADMINISTRADOR -->
+    <div id="sectionAdmin" style="display: none;">
+        <div class="header-box" style="text-align: center;">
+            <h2>⚙️ Panel de Administración</h2>
+            <p style="margin: 0; font-size: 13px; opacity: 0.9;">Alta de proyectos y recipientes</p>
         </div>
 
-        <div class="summary-meta" id="summaryMetaText">
-            <!-- Se llena por JS -->
+        <!-- Alta de Proyecto -->
+        <div class="admin-card">
+            <h3>➕ Crear Nuevo Proyecto</h3>
+            <div class="form-group">
+                <label>ID del Proyecto (Ej. PRJ-004)</label>
+                <input type="text" id="adminIdPrj" placeholder="PRJ-004">
+            </div>
+            <div class="form-group">
+                <label>Nombre del Proyecto / Marca</label>
+                <input type="text" id="adminNomPrj" placeholder="Ej. Reserva Especial">
+            </div>
+            <div class="form-group">
+                <label>Bodega de Origen</label>
+                <input type="text" id="adminBodegaPrj" placeholder="Ej. Bodega Catapano">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Relación</label>
+                <select id="adminTipoPrj">
+                    <option value="Propio">Propio</option>
+                    <option value="Elaboración a Terceros">Elaboración a Terceros</option>
+                    <option value="Asesoría">Asesoría</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Responsable / Contacto</label>
+                <input type="text" id="adminRespPrj" placeholder="Gerardo Catapano">
+            </div>
+            <button class="btn-action" onclick="guardarNuevoProyecto()">Guardar Nuevo Proyecto</button>
         </div>
 
-        <div class="table-responsive">
-            <table class="summary-table">
-                <thead>
-                    <tr>
-                        <th>Recipiente</th>
-                        <th>Proyecto</th>
-                        <th>Estado Enológico</th>
-                        <th>Varietal / Dueño</th>
-                        <th>Obs.</th>
-                        <th>Volumen Total</th>
-                    </tr>
-                </thead>
-                <tbody id="summaryTableBody">
-                    <!-- Se llena por JS -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="summary-total-box">
-            Volumen Total Controlado: <span id="summaryTotalLitros">0 Lts</span>
-        </div>
-
-        <div class="loading-overlay" id="loadingOverlay">
-            ⏳ Sincronizando inventario con la base de datos central... Por favor espere.
-        </div>
-
-        <div class="summary-buttons" id="summaryButtons">
-            <button class="btn-back" onclick="volverACorregir()">✏️ Volver a Editar</button>
-            <button class="btn-approve" onclick="aprobarYEnviar()">✅ Aprobar y Sincronizar</button>
+        <!-- Alta de Recipiente -->
+        <div class="admin-card">
+            <h3>➕ Agregar Recipiente al Catálogo</h3>
+            <div class="form-group">
+                <label>Nombre / Número (Ej. Pileta N° 45)</label>
+                <input type="text" id="adminNomRec" placeholder="Pileta N° 45">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Recipiente</label>
+                <select id="adminTipoRec">
+                    <option value="Pileta/Tanque">Pileta / Tanque</option>
+                    <option value="Barrica">Barrica</option>
+                    <option value="Botella">Botella</option>
+                    <option value="Bidon">Bidón / Tarza</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Capacidad Máxima o Unitaria (Lts)</label>
+                <input type="number" step="any" id="adminCapRec" placeholder="9000 o 225">
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="adminCatRec">
+                    <option value="Identificado">Identificado (Pileta fija)</option>
+                    <option value="Genérico">Genérico (Unidades múltiples)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Bodega Asociada</label>
+                <input type="text" id="adminBodegaRec" placeholder="Bodega Catapano (o 'Todas / Genérico')">
+            </div>
+            <button class="btn-action" onclick="guardarNuevoRecipiente()">Agregar al Catálogo</button>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzVH8wN24X974mn96tU3IXQmte28USmMWTAvkwg6QD6gZVkvcy5vgZlOp_lfsN1rqma/exec"; // <-- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const API_URL = "https://script.google.com/macros/s/AKfycbwReb9HqM_x0oZK-2VzjkrW4rjuFYNMXE6w8CiByoKTL4z18Tp_6QCKBLcxFnI7u7g/exec"; // <-- PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
         let listaProyectos = [];
         let catalogoGlobal = [];
         let ocupados = [];
@@ -169,6 +271,20 @@
             cargarProyectosYBodegas();
         };
 
+        function cambiarSeccion(seccion) {
+            document.getElementById('sectionControl').style.display = seccion === 'control' ? 'block' : 'none';
+            document.getElementById('sectionGlobal').style.display = seccion === 'global' ? 'block' : 'none';
+            document.getElementById('sectionAdmin').style.display = seccion === 'admin' ? 'block' : 'none';
+
+            document.getElementById('tabControl').className = 'nav-tab ' + (seccion === 'control' ? 'active' : '');
+            document.getElementById('tabGlobal').className = 'nav-tab ' + (seccion === 'global' ? 'active' : '');
+            document.getElementById('tabAdmin').className = 'nav-tab ' + (seccion === 'admin' ? 'active' : '');
+
+            if (seccion === 'global') {
+                cargarInventarioGlobal();
+            }
+        }
+
         function cargarProyectosYBodegas() {
             fetch(API_URL + "?action=getProyectosYBodegas")
                 .then(res => res.json())
@@ -177,7 +293,7 @@
                     poblarSelectsInicio();
                 })
                 .catch(err => {
-                    alert("Error al cargar la lista de proyectos y bodegas.");
+                    alert("Error al cargar proyectos.");
                     console.error(err);
                 });
         }
@@ -186,16 +302,11 @@
             const selBodega = document.getElementById('selectBodega');
             const selProyecto = document.getElementById('selectProyecto');
 
-            // Extraer bodegas únicas
             let bodegasSet = new Set();
-            listaProyectos.forEach(p => {
-                if(p.bodegaOrigen) bodegasSet.add(p.bodegaOrigen);
-            });
+            listaProyectos.forEach(p => { if(p.bodegaOrigen) bodegasSet.add(p.bodegaOrigen); });
 
-            selBodega.innerHTML = '<option value="">-- Seleccionar Bodega / Ubicación --</option>';
-            bodegasSet.forEach(b => {
-                selBodega.innerHTML += `<option value="${b}">${b}</option>`;
-            });
+            selBodega.innerHTML = '<option value="">-- Seleccionar Bodega --</option>';
+            bodegasSet.forEach(b => { selBodega.innerHTML += `<option value="${b}">${b}</option>`; });
 
             selProyecto.innerHTML = '<option value="">-- Seleccionar Proyecto Principal --</option>';
             listaProyectos.forEach(p => {
@@ -207,22 +318,18 @@
             const bodega = document.getElementById('selectBodega').value;
             if (!bodega) return;
 
-            // Filtrar catálogo para esa bodega
             fetch(API_URL + "?action=getCatalogo&bodega=" + encodeURIComponent(bodega))
                 .then(res => res.json())
                 .then(data => {
                     catalogoGlobal = data;
                     poblarSelectRecipientes();
                 })
-                .catch(err => {
-                    alert("Error al obtener catálogo de la bodega.");
-                    console.error(err);
-                });
+                .catch(err => alert("Error al obtener catálogo."));
         }
 
         function poblarSelectRecipientes() {
             const sel = document.getElementById('selectRecipiente');
-            sel.innerHTML = '<option value="">-- Elegir Pileta / Envase --</option>';
+            sel.innerHTML = '<option value="">-- Elegir Recipiente --</option>';
             catalogoGlobal.forEach((r, index) => {
                 let capTxt = r.capacidad ? ` (${r.capacidad} L)` : '';
                 sel.innerHTML += `<option value="${index}">${r.nombre}${capTxt}</option>`;
@@ -233,13 +340,9 @@
             const idx = document.getElementById('selectRecipiente').value;
             const selProyecto = document.getElementById('selectProyecto');
 
-            if (idx === "") {
-                alert("Por favor selecciona un recipiente de la lista.");
-                return;
-            }
+            if (idx === "") { alert("Selecciona un recipiente."); return; }
 
             const itemCat = catalogoGlobal[idx];
-
             const esPorUnidades = itemCat.nombre.toLowerCase().includes('barrica') || 
                                   itemCat.nombre.toLowerCase().includes('tarza') || 
                                   itemCat.nombre.toLowerCase().includes('bidon') || 
@@ -247,13 +350,11 @@
                                   itemCat.nombre.toLowerCase().includes('botella');
 
             if (!esPorUnidades && ocupados.some(o => o.nombre === itemCat.nombre)) {
-                alert("Este recipiente ya fue agregado en este control.");
+                alert("Este recipiente ya fue agregado.");
                 return;
             }
 
             let valorInicial = esPorUnidades ? '' : (itemCat.capacidad || '');
-
-            // Obtener datos del proyecto seleccionado por defecto
             let idPrjSel = selProyecto.value;
             let nomPrjSel = selProyecto.options[selProyecto.selectedIndex] ? selProyecto.options[selProyecto.selectedIndex].getAttribute('data-nombre') : 'Sin Asignar';
 
@@ -285,17 +386,16 @@
             document.getElementById('cantOcupados').innerText = ocupados.length;
 
             if (ocupados.length === 0) {
-                cont.innerHTML = '<div class="empty-msg">No has agregado ningún recipiente aún.<br>Busca arriba la pileta o envase ocupado y presiona Agregar.</div>';
+                cont.innerHTML = '<div class="empty-msg">No has agregado ningún recipiente aún.</div>';
                 calcularTotalLitros();
                 return;
             }
 
             let html = '';
             ocupados.forEach((item, i) => {
-                let labelInput = item.esPorUnidades ? 'Cantidad de Unidades' : 'Litros Reales / Medidos';
-                let capInfo = item.esPorUnidades ? `(${item.capacidad} Lts unitario)` : `(Capacidad máx: ${item.capacidad} L)`;
+                let labelInput = item.esPorUnidades ? 'Cantidad de Unidades' : 'Litros Reales';
+                let capInfo = item.esPorUnidades ? `(${item.capacidad} Lts u.)` : `(Cap: ${item.capacidad} L)`;
 
-                // Opciones de proyectos
                 let opcionesProyectosHtml = '';
                 listaProyectos.forEach(p => {
                     let selAttr = (p.idProyecto === item.idProyecto) ? 'selected' : '';
@@ -306,45 +406,42 @@
                     <div class="card-ocupado">
                         <button class="btn-remove" onclick="eliminarItem(${i})">✕</button>
                         <div class="card-title">${item.nombre} <span class="card-cap">${capInfo}</span></div>
-                        <div class="subtotal-tag" id="subtotal_${i}">Total Litros: ${item.litrosCalculados.toLocaleString()} L</div>
+                        <div class="subtotal-tag" id="subtotal_${i}">Total: ${item.litrosCalculados.toLocaleString()} L</div>
                         
                         <div class="grid-inputs">
                             <div>
-                                <label>Proyecto / Marca</label>
-                                <select onchange="actualizarProyectoItem(${i}, this)">
-                                    ${opcionesProyectosHtml}
-                                </select>
+                                <label>Proyecto</label>
+                                <select onchange="actualizarProyectoItem(${i}, this)">${opcionesProyectosHtml}</select>
                             </div>
                             <div>
                                 <label>${labelInput}</label>
-                                <input type="number" step="any" placeholder="${labelInput}" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
+                                <input type="number" step="any" value="${item.cantidad}" oninput="actualizarValor(${i}, this.value)">
                             </div>
                             <div>
-                                <label>Estado Enológico</label>
+                                <label>Estado</label>
                                 <select onchange="actualizarCampo(${i}, 'estadoVino', this.value)">
-                                    <option value="Mosto / En Fermentación" ${item.estadoVino === 'Mosto / En Fermentación' ? 'selected' : ''}>Mosto / En Fermentación</option>
-                                    <option value="Vino Nuevo / Post Fermentación" ${item.estadoVino === 'Vino Nuevo / Post Fermentación' ? 'selected' : ''}>Vino Nuevo / Post Fermentación</option>
-                                    <option value="En Crianza / Stock" ${item.estadoVino === 'En Crianza / Stock' ? 'selected' : ''}>En Crianza / Stock</option>
-                                    <option value="Cortes / Mezclas" ${item.estadoVino === 'Cortes / Mezclas' ? 'selected' : ''}>Cortes / Mezclas</option>
-                                    <option value="Listo para Fraccionar" ${item.estadoVino === 'Listo para Fraccionar' ? 'selected' : ''}>Listo para Fraccionar</option>
+                                    <option value="Mosto / En Fermentación" ${item.estadoVino === 'Mosto / En Fermentación' ? 'selected' : ''}>Mosto / Fermentando</option>
+                                    <option value="Vino Nuevo / Post Fermentación" ${item.estadoVino === 'Vino Nuevo / Post Fermentación' ? 'selected' : ''}>Vino Nuevo</option>
+                                    <option value="En Crianza / Stock" ${item.estadoVino === 'En Crianza / Stock' ? 'selected' : ''}>En Crianza</option>
+                                    <option value="Cortes / Mezclas" ${item.estadoVino === 'Cortes / Mezclas' ? 'selected' : ''}>Cortes</option>
+                                    <option value="Listo para Fraccionar" ${item.estadoVino === 'Listo para Fraccionar' ? 'selected' : ''}>Para Fraccionar</option>
                                 </select>
                             </div>
                             <div>
-                                <label>Varietal / Vino</label>
-                                <input type="text" placeholder="Ej. Malbec 2026" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
+                                <label>Varietal</label>
+                                <input type="text" placeholder="Malbec" value="${item.varietal}" oninput="actualizarCampo(${i}, 'varietal', this.value)">
                             </div>
                             <div>
-                                <label>Dueño / Cliente</label>
+                                <label>Dueño</label>
                                 <select onchange="actualizarCampo(${i}, 'dueno', this.value)">
                                     <option value="Propio" ${item.dueno === 'Propio' ? 'selected' : ''}>Propio</option>
                                     <option value="Cliente A" ${item.dueno === 'Cliente A' ? 'selected' : ''}>Cliente A</option>
                                     <option value="Cliente B" ${item.dueno === 'Cliente B' ? 'selected' : ''}>Cliente B</option>
-                                    <option value="Terceros" ${item.dueno === 'Terceros' ? 'selected' : ''}>Terceros</option>
                                 </select>
                             </div>
                             <div>
                                 <label>Observaciones</label>
-                                <input type="text" placeholder="Ej. En mermas" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
+                                <input type="text" placeholder="Notas" value="${item.observaciones}" oninput="actualizarCampo(${i}, 'observaciones', this.value)">
                             </div>
                         </div>
                     </div>
@@ -356,92 +453,54 @@
         }
 
         function actualizarProyectoItem(index, selectElem) {
-            let idPrj = selectElem.value;
-            let nomPrj = selectElem.options[selectElem.selectedIndex].getAttribute('data-nombre');
-            ocupados[index].idProyecto = idPrj;
-            ocupados[index].nombreProyecto = nomPrj;
+            ocupados[index].idProyecto = selectElem.value;
+            ocupados[index].nombreProyecto = selectElem.options[selectElem.selectedIndex].getAttribute('data-nombre');
         }
 
         function actualizarValor(index, val) {
             ocupados[index].cantidad = val;
             let num = parseFloat(val) || 0;
-
-            if (ocupados[index].esPorUnidades) {
-                ocupados[index].litrosCalculados = num * ocupados[index].capacidad;
-            } else {
-                ocupados[index].litrosCalculados = num;
-            }
-
-            document.getElementById(`subtotal_${index}`).innerText = `Total Litros: ${ocupados[index].litrosCalculados.toLocaleString()} L`;
+            ocupados[index].litrosCalculados = ocupados[index].esPorUnidades ? (num * ocupados[index].capacidad) : num;
+            document.getElementById(`subtotal_${index}`).innerText = `Total: ${ocupados[index].litrosCalculados.toLocaleString()} L`;
             calcularTotalLitros();
         }
 
-        function actualizarCampo(index, campo, valor) {
-            ocupados[index][campo] = valor;
-        }
+        function actualizarCampo(index, campo, valor) { ocupados[index][campo] = valor; }
 
         function calcularTotalLitros() {
             let total = 0;
-            ocupados.forEach(item => {
-                total += item.litrosCalculados || 0;
-            });
+            ocupados.forEach(item => { total += item.litrosCalculados || 0; });
             document.getElementById('totalLitros').innerText = total.toLocaleString() + ' Lts';
         }
 
         function revisarInventario() {
             const operario = document.getElementById('operario').value.trim();
-            const fechaInv = document.getElementById('fechaInventario').value;
             const bodega = document.getElementById('selectBodega').value;
 
-            if (!operario) {
-                alert("Por favor ingresa tu nombre de Enólogo / Responsable.");
-                window.scrollTo({top: 0, behavior: 'smooth'});
-                return;
-            }
-
-            if (!bodega) {
-                alert("Por favor selecciona la Bodega / Ubicación.");
-                window.scrollTo({top: 0, behavior: 'smooth'});
-                return;
-            }
-
-            if (ocupados.length === 0) {
-                alert("No has agregado ningún recipiente a la lista.");
-                return;
-            }
-
-            let sinCantidad = ocupados.filter(o => o.cantidad === '' || parseFloat(o.cantidad) < 0);
-            if (sinCantidad.length > 0) {
-                alert(`Hay recipientes sin valor asignado. Por favor revísalos.`);
+            if (!operario || !bodega || ocupados.length === 0) {
+                alert("Completa el operario, la bodega y agrega al menos un recipiente.");
                 return;
             }
 
             document.getElementById('summaryMetaText').innerHTML = `
-                <p><strong>Enólogo / Responsable:</strong> ${operario}</p>
-                <p><strong>Bodega Auditada:</strong> ${bodega}</p>
-                <p><strong>Fecha del Control:</strong> ${fechaInv}</p>
-                <p><strong>Total de Recipientes Controlados:</strong> ${ocupados.length}</p>
+                <p><strong>Enólogo:</strong> ${operario}</p>
+                <p><strong>Bodega:</strong> ${bodega}</p>
+                <p><strong>Total Recipientes:</strong> ${ocupados.length}</p>
             `;
 
             let tbodyHtml = '';
             let totalGeneral = 0;
             ocupados.forEach(item => {
                 totalGeneral += item.litrosCalculados;
-                let detalleCant = item.esPorUnidades ? 
-                    `${item.litrosCalculados.toLocaleString()} L<br><span style="color:#555; font-size:10px;">(${item.cantidad} unid. × ${item.capacidad}L)</span>` : 
-                    `${item.litrosCalculados.toLocaleString()} L`;
-                
-                let obsText = item.observaciones ? item.observaciones : '-';
-                let varietalText = item.varietal ? `${item.varietal} (${item.dueno})` : item.dueno;
-
+                let detalleCant = item.esPorUnidades ? `${item.litrosCalculados.toLocaleString()} L (${item.cantidad}u)` : `${item.litrosCalculados.toLocaleString()} L`;
                 tbodyHtml += `
                     <tr>
                         <td><strong>${item.nombre}</strong></td>
                         <td><span style="color:#5a1827; font-weight:bold;">${item.nombreProyecto}</span></td>
                         <td>${item.estadoVino}</td>
-                        <td>${varietalText}</td>
-                        <td>${obsText}</td>
-                        <td style="font-weight:bold; color:#117a65; white-space:nowrap;">${detalleCant}</td>
+                        <td>${item.varietal || '-'} (${item.dueno})</td>
+                        <td>${item.observaciones || '-'}</td>
+                        <td style="font-weight:bold; color:#117a65;">${detalleCant}</td>
                     </tr>
                 `;
             });
@@ -457,7 +516,6 @@
         function volverACorregir() {
             document.getElementById('summaryView').style.display = 'none';
             document.getElementById('mainView').style.display = 'block';
-            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function aprobarYEnviar() {
@@ -481,24 +539,86 @@
 
             fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify({
-                    fechaControl: fechaInv,
-                    operario: operario,
-                    bodega: bodega,
-                    items: itemsAGuardar
-                })
+                body: JSON.stringify({ fechaControl: fechaInv, operario: operario, bodega: bodega, items: itemsAGuardar })
             })
             .then(res => res.json())
-            .then(res => {
-                alert(res.message);
-                location.reload();
+            .then(res => { alert(res.message); location.reload(); })
+            .catch(err => { alert("Error al sincronizar."); console.error(err); });
+        }
+
+        function cargarInventarioGlobal() {
+            const cont = document.getElementById('contenedorGlobal');
+            cont.innerHTML = '<div class="empty-msg">Consultando inventario global...</div>';
+
+            fetch(API_URL + "?action=getInventarioGlobal")
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.proyectos || data.proyectos.length === 0) {
+                        cont.innerHTML = '<div class="empty-msg">No hay registros de inventario todavía.</div>';
+                        return;
+                    }
+
+                    let html = `<div class="global-card" style="background:#5a1827; color:white;">
+                        <h3 style="margin:0; color:white;">Volumen Total Global en Bodegas</h3>
+                        <div style="font-size:24px; font-weight:bold; margin-top:5px;">${data.totalGlobal.toLocaleString()} Lts</div>
+                    </div>`;
+
+                    data.proyectos.forEach(p => {
+                        let estadosHtml = '';
+                        for (let est in p.estados) {
+                            estadosHtml += `<li>${est}: <strong>${p.estados[est].toLocaleString()} Lts</strong></li>`;
+                        }
+
+                        html += `
+                            <div class="global-card">
+                                <h4>🍷 ${p.nombreProyecto} <span style="font-size:12px; color:#666; font-weight:normal;">(${p.idProyecto})</span></h4>
+                                <div style="font-size:16px; font-weight:bold; color:#27ae60; margin-bottom:8px;">Total: ${p.litrosTotales.toLocaleString()} Lts</div>
+                                <ul style="margin:0; padding-left:15px; font-size:13px; color:#444;">
+                                    ${estadosHtml}
+                                </ul>
+                            </div>
+                        `;
+                    });
+
+                    cont.innerHTML = html;
+                })
+                .catch(err => { cont.innerHTML = '<div class="empty-msg">Error al cargar inventario global.</div>'; });
+        }
+
+        function guardarNuevoProyecto() {
+            let idPrj = document.getElementById('adminIdPrj').value.trim();
+            let nomPrj = document.getElementById('adminNomPrj').value.trim();
+            let bodegaPrj = document.getElementById('adminBodegaPrj').value.trim();
+            let tipoPrj = document.getElementById('adminTipoPrj').value;
+            let respPrj = document.getElementById('adminRespPrj').value.trim();
+
+            if (!idPrj || !nomPrj || !bodegaPrj) { alert("Completa al menos ID, Nombre y Bodega."); return; }
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: 'crearProyecto', idProyecto: idPrj, nombreProyecto: nomPrj, bodegaOrigen: bodegaPrj, tipoRelacion: tipoPrj, responsable: respPrj })
             })
-            .catch(err => {
-                alert("Error al guardar en Google Sheets.");
-                console.error(err);
-                document.getElementById('summaryButtons').style.display = 'flex';
-                document.getElementById('loadingOverlay').style.display = 'none';
-            });
+            .then(res => res.json())
+            .then(res => { alert(res.message); location.reload(); })
+            .catch(err => alert("Error al crear proyecto."));
+        }
+
+        function guardarNuevoRecipiente() {
+            let nomRec = document.getElementById('adminNomRec').value.trim();
+            let tipoRec = document.getElementById('adminTipoRec').value;
+            let capRec = parseFloat(document.getElementById('adminCapRec').value) || 0;
+            let catRec = document.getElementById('adminCatRec').value;
+            let bodegaRec = document.getElementById('adminBodegaRec').value.trim();
+
+            if (!nomRec || capRec <= 0) { alert("Ingresa un nombre y capacidad válida."); return; }
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: 'crearRecipiente', nombre: nomRec, tipoRecipiente: tipoRec, capacidad: capRec, categoria: catRec, bodegaAsociada: bodegaRec })
+            })
+            .then(res => res.json())
+            .then(res => { alert(res.message); location.reload(); })
+            .catch(err => alert("Error al agregar recipiente."));
         }
     </script>
 </body>
